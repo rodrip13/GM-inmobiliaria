@@ -1,0 +1,141 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { createSupabaseServerClient } from '../../lib/supabase';
+
+const { user } = Astro.locals;
+const supabase = createSupabaseServerClient(Astro);
+
+// Obtener propiedades del agente actual
+const { data: properties, error } = await supabase
+  .from('properties')
+  .select('*')
+  .order('created_at', { ascending: false });
+
+const statusColor = {
+    disponible: 'bg-green-100 text-green-800',
+    reservado: 'bg-yellow-100 text-yellow-800',
+    vendido: 'bg-red-100 text-red-800'
+};
+---
+
+<Layout title="Dashboard | GM Inmobiliaria">
+  <div class="min-h-screen bg-gray-50 flex flex-col">
+    <header class="bg-white shadow sticky top-0 z-20">
+      <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <h1 class="text-2xl font-bold text-charcoal">
+          Panel de Control
+        </h1>
+        <div class="flex items-center gap-4">
+             <span class="text-xs sm:text-sm text-gray-500 hidden sm:inline">{user?.email}</span>
+             <a href="/admin/nueva" class="px-4 py-2 bg-primary text-charcoal text-sm font-bold rounded-xl hover:bg-yellow-400 transition-colors shadow-sm">
+                + Nueva Propiedad
+             </a>
+             <form action="/api/auth/signout" method="POST">
+                <button type="submit" class="text-sm text-gray-500 hover:text-red-600 font-medium border border-gray-200 px-3 py-2 rounded-lg hover:bg-red-50 transition-colors">Salir</button>
+             </form>
+        </div>
+      </div>
+    </header>
+    
+    <main class="flex-1 max-w-7xl mx-auto w-full py-8 px-4 sm:px-6 lg:px-8">
+      
+      {properties && properties.length > 0 ? (
+          <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+             <ul role="list" class="divide-y divide-gray-100">
+                {properties.map((prop) => (
+                    <li class="p-4 hover:bg-gray-50 transition-colors">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0 w-16 h-16 rounded-lg bg-gray-200 overflow-hidden">
+                                {prop.images && prop.images[0] ? (
+                                    <img class="h-full w-full object-cover" loading="lazy" src={prop.images[0].startsWith('http') ? prop.images[0] : `${import.meta.env.PUBLIC_SUPABASE_URL}/storage/v1/object/public/propiedades-img/${prop.images[0]}`} alt={`Imagen de ${prop.title}`} />
+                                ) : (
+                                    <div class="h-full w-full flex items-center justify-center text-xs text-gray-400">Sin foto</div>
+                                )}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm font-medium text-gray-900 truncate">
+                                    {prop.title}
+                                </p>
+                                <p class="text-sm text-gray-500 truncate">
+                                    {prop.city} · {prop.operation} · <span class="font-semibold">{prop.currency} {prop.price}</span>
+                                </p>
+                            </div>
+                            <div class="flex flex-col sm:flex-row items-end sm:items-center gap-2">
+                                <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium uppercase ${statusColor[prop.status] || 'bg-gray-100'}`}>
+                                    {prop.status}
+                                </span>
+                                
+                                <div class="relative flex items-center gap-2">
+                                    {/* Botones de acción rápida: Cambiar estado */}
+                                    <select 
+                                        onchange={`updateStatus('${prop.id}', this.value)`}
+                                        class="text-xs border-gray-200 rounded-lg py-1 pl-2 pr-6 focus:ring-primary focus:border-primary"
+                                    >
+                                        <option value="" disabled selected>Estado...</option>
+                                        <option value="disponible">Disponible</option>
+                                        <option value="reservado">Reservado</option>
+                                        <option value="vendido">Vendido</option>
+                                    </select>
+                                    
+                                    <button onclick={`deleteProperty('${prop.id}')`} class="text-gray-400 hover:text-red-600 p-1">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                ))}
+             </ul>
+          </div>
+      ) : (
+          <div class="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100">
+             <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+             <h3 class="mt-2 text-sm font-medium text-gray-900">No hay propiedades</h3>
+             <p class="mt-1 text-sm text-gray-500">Comienza a cargar tu inventario para verlo aquí.</p>
+             <div class="mt-6">
+                <a href="/admin/nueva" class="px-4 py-2 bg-primary text-charcoal rounded-xl hover:bg-yellow-400 transition-colors shadow-sm font-medium">
+                    Cargar Primera Propiedad
+                </a>
+             </div>
+          </div>
+      )}
+    </main>
+  </div>
+</Layout>
+
+<script is:inline>
+    // Funciones globales para los eventos onclick del HTML renderizado
+    async function updateStatus(id, newStatus) {
+        if(!confirm(`¿Cambiar estado a ${newStatus}?`)) return;
+
+        try {
+            const res = await fetch('/api/properties/update', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id, status: newStatus })
+            });
+            if(res.ok) {
+                window.location.reload();
+            } else {
+                alert('Error al actualizar');
+            }
+        } catch(e) { console.error(e); alert('Error de conexión'); }
+    }
+
+    async function deleteProperty(id) {
+        if(!confirm('¿Seguro que deseas eliminar esta propiedad? Esta acción no se puede deshacer.')) return;
+
+        try {
+            const res = await fetch('/api/properties/delete', {
+                method: 'POST', // Usamos POST para simular DELETE si queremos simplificar payload
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ id })
+            });
+            if(res.ok) {
+                window.location.reload();
+            } else {
+                alert('Error al eliminar');
+            }
+        } catch(e) { console.error(e); alert('Error de conexión'); }
+    }
+</script>

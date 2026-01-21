@@ -3,12 +3,12 @@
 ## 📌 Resumen de Progreso
 | Fase | Tarea Principal | Estado |
 | :--- | :--- | :---: |
-| 1 | Configuración, PWA & Design System | ⬜ |
-| 2 | Setup Base de Datos | ⬜ |
-| 3 | Autenticación | ⬜ |
-| 4 | Backend & Storage | ⬜ |
-| 5 | Dashboard Admin | ⬜ |
-| 6 | Frontend Mobile-First | ⬜ |
+| 1 | Configuración, PWA & Design System | ✅ |
+| 2 | Setup Base de Datos | ✅ |
+| 3 | Autenticación | ✅ |
+| 4 | Backend & Storage | ✅ |
+| 5 | Dashboard Admin | ✅ |
+| 6 | Frontend Mobile-First | ✅ |
 
 *(Estados: ⬜ Pendiente, 🚧 En Progreso, ✅ Completado)*
 
@@ -34,58 +34,85 @@
 ## 🚀 Pasos Detallados
 
 ### 1. Configuración & Design System
-- [ ] Inicializar proyecto Astro + Tailwind CSS.
-- [ ] Instalar adaptador Netlify (`npx astro add netlify`).
-- [ ] **PWA Setup (App Instalable):**
-    - [ ] Instalar `@vite-pwa/astro`.
-    - [ ] Configurar `manifest.webmanifest`:
-        - [ ] Nombre: "GM Inmobiliaria".
-        - [ ] `display: standalone` (Pantalla completa sin barra URL).
-        - [ ] Colores de sistema y background.
-    - [ ] Configurar Service Worker (Estrategia `NetworkFirst` para contenido SSR).
-- [ ] **Config Tailwind (`tailwind.config.mjs`):**
-    - [ ] Importar fuente 'Work Sans'.
-    - [ ] Paleta de colores.
-    - [ ] Configurar `container-queries` y `forms` plugin.
-- [ ] Configurar `<head>` global con Meta Viewport optimizado para móviles.
+- [x] Inicializar proyecto Astro + Tailwind CSS.
+- [x] Instalar adaptador Netlify (`npx astro add netlify`).
+- [x] **PWA Setup (App Instalable):**
+    - [x] Instalar `@vite-pwa/astro`.
+    - [x] Configurar `manifest.webmanifest`:
+        - [x] Nombre: "GM Inmobiliaria".
+        - [x] `display: standalone` (Pantalla completa sin barra URL).
+        - [x] Colores de sistema y background.
+    - [x] Configurar Service Worker (Estrategia `NetworkFirst` para contenido SSR).
+- [x] **Config Tailwind (`tailwind.config.mjs`):**
+    - [x] Importar fuente 'Work Sans'.
+    - [x] Paleta de colores.
+    - [x] Configurar `container-queries` y `forms` plugin.
+- [x] Configurar `<head>` global con Meta Viewport optimizado para móviles.
 
 ### 2. Setup Base de Datos (Supabase)
-- [ ] Crear proyecto en Supabase.
-- [ ] Ejecutar Script SQL:
-    - [ ] `properties`: Incluir campos para `bathrooms`, `bedrooms`, `sq_meters`.
-    - [ ] `tags`, `public_profiles`.
-- [ ] Configurar Storage Bucket `propiedades-img`.
-- [ ] Habilitar RLS (Seguridad).
+- [x] Crear proyecto en Supabase.
+- [x] Ejecutar Script SQL:
+    - [x] `properties`: Incluir campos para `bathrooms`, `bedrooms`, `sq_meters`.
+    - [x] `tags`, `public_profiles`.
+- [x] Configurar Storage Bucket `propiedades-img`.
+- [x] Habilitar RLS (Seguridad).
 
 ### 3. Autenticación (Persistente)
-- [ ] Setup `@supabase/ssr` con Cookies (30 días de persistencia).
-- [ ] Página `/login` minimalista.
-- [ ] Middleware de protección para rutas `/admin`.
+- [x] Setup `@supabase/ssr` con Cookies (30 días de persistencia).
+- [x] Página `/login` minimalista.
+- [x] Middleware de protección para rutas `/admin`.
 
 ### 4. Backend de Imágenes
-- [ ] API Route `/api/upload` con `sharp`.
-- [ ] Implementar streaming upload a Supabase.
-- [ ] Optimización: Resize 1200px + WebP (Calidad 80%).
-- [ ] *Nota:* Configurar función de Netlify para permitir timeout extendido (si es posible en plan Free) o optimizar proceso.
+- [x] API Route `/api/upload` con `sharp`.
+- [x] Implementar streaming upload a Supabase.
+- [x] Optimización: Resize 1200px + WebP (Calidad 80%).
+- [x] *Nota:* Configurar función de Netlify para permitir timeout extendido (si es posible en plan Free) o optimizar proceso.
 
 ### 5. Dashboard Admin (`/admin`)
-- [ ] Layout Mobile-Friendly (Menú accesible) y con acceso rápido a "Nueva Propiedad".
-- [ ] **Formulario de Carga (`/admin/nueva`):**
-    - [ ] Selector de ubicación (Leaflet Map Click).
-    - [ ] Input de imágenes múltiple.
-- [ ] Dashboard de gestión de estados (Vendido/Reservado).
+- [x] Layout Mobile-Friendly (Menú accesible) y con acceso rápido a "Nueva Propiedad".
+- [x] **Formulario de Carga (`/admin/nueva`):**
+    - [x] Selector de ubicación (Leaflet Map Click).
+    - [x] Input de imágenes múltiple.
+- [x] Dashboard de gestión de estados (Vendido/Reservado).
 
 ### 6. Frontend Mobile-First
-- [ ] **Estructura App Shell:**
-    - [ ] `BottomNav.astro`: Navegación fija inferior (iOS style).
-    - [ ] `Header.astro`: Sticky + Backdrop Blur.
-- [ ] **Componentes Home:**
-    - [ ] `HeroCarousel.astro`: Scroll Snap horizontal + Gradientes sobre imagen.
-    - [ ] `PropertyCard.astro`: Diseño vertical con imagen grande y badges de estado.
-- [ ] **Páginas:**
-    - [ ] Home (`/`): Listados + Filtros URL.
-    - [ ] Detalle (`/propiedad/[id]`): Galería swipeable + Botón WhatsApp Sticky.
-- [ ] Integración Mapas: Leaflet en modo `client:only` para evitar bloqueos SSR.
+- [x] **Estructura App Shell:**
+    - [x] `BottomNav.astro` / `Header.astro`.
+- [x] **Componentes Home:**
+    - [x] `PropertyCard.astro`: Diseño vertical con imagen grande.
+- [x] **Páginas:**
+    - [x] Home (`/`): Listados.
+    - [x] Detalle (`/propiedad/[id]`): Galería swipeable + Botón WhatsApp Sticky.
+- [x] Integración Mapas: Leaflet en modo `client:only`.
+
+## 🚀 Fase 2: Profesionalización y Funcionalidades Avanzadas
+
+### 7. Buscador y Filtros Avanzados
+- [x] Implementar estado en URL (Query Params) para compartir búsquedas.
+- [x] Componente `SearchFilters.astro` en Home:
+    - [x] Tipo de Operación (Venta/Alquiler).
+    - [x] Ciudad/Ubicación.
+    - [x] Rango de Precios (Min - Max).
+- [x] Lógica de filtrado en Supabase (`query.eq`, `query.gte`, `query.lte`).
+
+### 8. Mejoras UX (Experiencia de Usuario)
+- [x] **Lightbox:** Vista de pantalla completa para galería de imágenes.
+- [x] **Botón Compartir:** Web Share API para móviles.
+- [ ] **Mapa Interactivo:** Vista de mapa general en Home.
+
+### 9. SEO Técnico & Performance
+- [x] `sitemap.xml` dinámico.
+- [x] `robots.txt`.
+- [x] Schema.org (JSON-LD).
+- [x] Optimización de carga (Lazy Loading).
+- [x] ViewTransitions (Navegación SPA).
+- [x] Página 404 personalizada.
+
+### 10. Deploy a Producción
+- [ ] Conectar repositorio con Netlify.
+- [ ] Variables de Entorno en Netlify.
+- [ ] Configuración DNS.
+
 
 ---
 

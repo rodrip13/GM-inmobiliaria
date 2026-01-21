@@ -1,0 +1,94 @@
+---
+interface Props {
+  property: {
+    id: string;
+    title: string;
+    slug: string;
+    price: number;
+    currency: 'USD' | 'ARS' | 'UYU';
+    city: string;
+    operation: 'venta' | 'alquiler' | 'alquiler_temporal';
+    images: string[];
+    bedrooms: number;
+    bathrooms: number;
+    covered_area: number;
+  };
+}
+
+const { property } = Astro.props;
+
+// Formateador de moneda
+const formattedPrice = new Intl.NumberFormat('es-UY', {
+  style: 'currency',
+  currency: property.currency,
+  maximumFractionDigits: 0,
+}).format(property.price);
+
+const mainImage = property.images && property.images.length > 0 
+    ? (property.images[0].startsWith('http') ? property.images[0] : `${import.meta.env.PUBLIC_SUPABASE_URL}/storage/v1/object/public/propiedades-img/${property.images[0]}`)
+    : 'https://via.placeholder.com/600x400?text=Sin+Imagen';
+
+const operationLabel = {
+  venta: 'Venta',
+  alquiler: 'Alquiler',
+  alquiler_temporal: 'Temporal'
+};
+---
+
+<a href={`/propiedad/${property.id}`} class="group relative flex flex-col justify-end w-full aspect-[4/5] rounded-xl overflow-hidden hover:shadow-xl transition-all duration-300">
+  
+  {/* Imagen de Fondo */}
+  <div 
+    class="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
+    style={`background-image: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.4)), url('${mainImage}');`}
+  ></div>
+
+  {/* Badge de Operación (Superior Derecha) */}
+  <div class="absolute top-4 right-4 z-10">
+    <span class="bg-white/90 backdrop-blur-md text-charcoal text-xs font-bold px-3 py-1.5 rounded-lg uppercase tracking-wider shadow-sm border border-white/20">
+      {operationLabel[property.operation]}
+    </span>
+  </div>
+
+  {/* Tarjeta de Información Flotante */}
+  <div class="relative p-4 z-10">
+    <div class="bg-white/95 backdrop-blur-lg shadow-lg rounded-xl p-4 flex flex-col gap-1 border-l-4 border-primary transform transition-transform duration-300 group-hover:-translate-y-1">
+      
+      <div class="flex justify-between items-start gap-2">
+        <h3 class="text-charcoal text-base font-bold truncate leading-tight flex-1" title={property.title}>
+          {property.title}
+        </h3>
+      </div>
+      
+      <div class="flex justify-between items-baseline mb-2">
+        <p class="text-primary text-sm font-bold">{formattedPrice}</p>
+        <p class="text-[10px] text-gray-500 font-medium uppercase tracking-wide truncate max-w-[40%]">{property.city}</p>
+      </div>
+
+      <div class="flex items-center gap-3 pt-2 border-t border-gray-100">
+        {property.bedrooms > 0 && (
+          <div class="flex items-center gap-1 text-gray-600" title="Dormitorios">
+            <span class="material-symbols-outlined text-[16px]">bed</span>
+            <span class="text-xs font-medium">{property.bedrooms}</span>
+          </div>
+        )}
+        
+        {property.bathrooms > 0 && (
+          <div class="flex items-center gap-1 text-gray-600" title="Baños">
+            <span class="material-symbols-outlined text-[16px]">bathtub</span>
+            <span class="text-xs font-medium">{property.bathrooms}</span>
+          </div>
+        )}
+        
+        {property.covered_area > 0 && (
+          <div class="flex items-center gap-1 text-gray-600" title="Superficie Cubierta">
+            <span class="material-symbols-outlined text-[16px]">square_foot</span>
+            <span class="text-xs font-medium">{property.covered_area}m²</span>
+          </div>
+        )}
+      </div>
+      
+    </div>
+  </div>
+
+</a>

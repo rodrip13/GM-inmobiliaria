@@ -1,0 +1,394 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import { supabase } from "../../lib/supabase";
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/");
+}
+
+const { data: property, error } = await supabase
+  .from("properties")
+  .select("*")
+  .eq("id", id)
+  .single();
+
+if (error || !property) {
+  return Astro.redirect("/404");
+}
+
+const formattedPrice = new Intl.NumberFormat("es-UY", {
+  style: "currency",
+  currency: property.currency,
+  maximumFractionDigits: 0,
+}).format(property.price);
+
+const mainImage =
+  property.images && property.images.length > 0
+    ? property.images[0].startsWith("http")
+      ? property.images[0]
+      : `${import.meta.env.PUBLIC_SUPABASE_URL}/storage/v1/object/public/propiedades-img/${property.images[0]}`
+    : "https://via.placeholder.com/800x600?text=Sin+Imagen";
+
+const allImages = property.images && property.images.length > 0
+    ? property.images.map((img: string) => img.startsWith("http") ? img : `${import.meta.env.PUBLIC_SUPABASE_URL}/storage/v1/object/public/propiedades-img/${img}`)
+    : ["https://via.placeholder.com/800x600?text=Sin+Imagen"];
+
+// Mensaje de WhatsApp pre-llenado
+const whatsappMessage = `Hola, me interesa la propiedad "${property.title}" que vi en la web.`;
+const whatsappLink = `https://wa.me/59800000000?text=${encodeURIComponent(whatsappMessage)}`; // TODO: Reemplazar número
+
+// JSON-LD Schema
+const schemaJSON = {
+  "@context": "https://schema.org",
+  "@type": "RealEstateListing",
+  "name": property.title,
+  "description": property.description,
+  "image": allImages,
+  "url": `https://gm-inmobiliaria.netlify.app/propiedad/${property.id}`,
+  "datePosted": property.created_at,
+  "price": property.price,
+  "priceCurrency": property.currency,
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": property.address,
+    "addressLocality": property.city,
+    "addressCountry": "UY"
+  },
+  "geo": {
+    "@type": "GeoCoordinates",
+    "latitude": property.location_lat,
+    "longitude": property.location_lng
+  },
+  "numberOfRooms": property.bedrooms,
+  "floorSize": {
+    "@type": "QuantitativeValue",
+    "value": property.covered_area,
+    "unitCode": "MTK"
+  }
+};
+---
+
+<Layout title={`${property.title} | GM Inmobiliaria`}>
+  <script type="application/ld+json" set:html={JSON.stringify(schemaJSON)} is:inline></script>
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <main class="min-h-screen bg-white pb-24">
+    <!-- Header de Navegación -->
+    <header class="fixed top-0 w-full z-40 bg-white/80 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
+      <div class="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+        <a href="/" class="p-2 -ml-2 text-charcoal hover:bg-gray-100 rounded-full transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+        </a>
+        <h1 class="font-bold text-lg truncate max-w-[200px] sm:max-w-md">{property.title}</h1>
+        <button id="share-btn" data-title={property.title} class="p-2 -mr-2 text-charcoal hover:bg-gray-100 rounded-full transition-colors" aria-label="Compartir propiedad">
+          <span class="material-symbols-outlined">share</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Galería -->
+    <div class="mt-16 relative aspect-[4/3] sm:aspect-video bg-gray-100 snap-x snap-mandatory overflow-x-auto flex scrollbar-hide cursor-pointer" id="gallery-container" data-images={JSON.stringify(allImages)}>
+      {allImages.map((img: string, index: number) => (
+        <div class="snap-center flex-shrink-0 w-full h-full relative gallery-item" data-index={index}>
+            <img 
+            src={img} 
+            alt={`${property.title} - Imagen ${index + 1}`} 
+            class="w-full h-full object-cover"
+            loading={index === 0 ? "eager" : "lazy"}
+            />
+        </div>
+      ))}
+      
+      {allImages.length > 1 && (
+        <div class="absolute bottom-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-xs backdrop-blur-sm pointer-events-none">
+            1 / {allImages.length}
+        </div>
+      )}
+    </div>
+
+    <div class="max-w-3xl mx-auto px-4 py-6 space-y-8">
+      
+      <!-- Título y Precio -->
+      <div class="space-y-2">
+        <div class="flex justify-between items-start">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary uppercase tracking-wide">
+                {property.operation.replace('_', ' ')}
+            </span>
+            <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide
+                ${property.status === 'disponible' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {property.status}
+            </span>
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-bold text-charcoal leading-tight">
+          {property.title}
+        </h2>
+        <p class="text-3xl font-bold text-primary">{formattedPrice}</p>
+        <p class="text-gray-500 flex items-center gap-1">
+            <span class="material-symbols-outlined text-[20px] text-gray-400">location_on</span>
+            {property.address}, {property.city}
+        </p>
+      </div>
+
+      <hr class="border-gray-100" />
+
+      <!-- Características Principales -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        
+        <div class="flex items-center gap-3 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+            <div class="bg-white p-2.5 rounded-xl shadow-sm border border-gray-100 text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined">bed</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-lg font-bold text-charcoal leading-none">{property.bedrooms}</span>
+                <span class="text-xs text-gray-500 font-medium mt-1">Dormitorios</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+            <div class="bg-white p-2.5 rounded-xl shadow-sm border border-gray-100 text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined">bathtub</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-lg font-bold text-charcoal leading-none">{property.bathrooms}</span>
+                <span class="text-xs text-gray-500 font-medium mt-1">Baños</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+            <div class="bg-white p-2.5 rounded-xl shadow-sm border border-gray-100 text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined">square_foot</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-lg font-bold text-charcoal leading-none">{property.covered_area} m²</span>
+                <span class="text-xs text-gray-500 font-medium mt-1">Cubiertos</span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+             <div class="bg-white p-2.5 rounded-xl shadow-sm border border-gray-100 text-primary flex items-center justify-center">
+                <span class="material-symbols-outlined">garage</span>
+            </div>
+            <div class="flex flex-col">
+                <span class="text-lg font-bold text-charcoal leading-none">{property.garage ? 'Sí' : 'No'}</span>
+                <span class="text-xs text-gray-500 font-medium mt-1">Cochera</span>
+            </div>
+        </div>
+
+      </div>
+
+      <!-- Descripción -->
+      <div class="prose prose-yellow max-w-none">
+        <h3 class="text-xl font-bold text-charcoal mb-2">Descripción</h3>
+        <p class="text-gray-600 whitespace-pre-line leading-relaxed">
+            {property.description}
+        </p>
+      </div>
+
+      <!-- Mapa -->
+      <div>
+        <h3 class="text-xl font-bold text-charcoal mb-4">Ubicación</h3>
+        <div id="map" class="h-64 sm:h-80 w-full rounded-2xl z-0 shadow-sm" data-lat={property.location_lat} data-lng={property.location_lng}></div>
+      </div>
+
+    </div>
+
+    <div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 p-4 pb-6 sm:pb-4 z-40 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div class="max-w-4xl mx-auto flex gap-4">
+             <a href={whatsappLink} target="_blank" rel="noopener noreferrer" class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-lg hover:shadow-green-500/30">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+                <span>Consultar WhatsApp</span>
+             </a>
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <dialog id="lightbox" class="backdrop:bg-black/90 bg-transparent w-full h-full max-w-none max-h-none m-0 p-0 z-[60] focus:outline-none overflow-hidden">
+        <div class="relative w-full h-full flex items-center justify-center">
+            <!-- Controles -->
+            <button id="lightbox-close" class="absolute top-4 right-4 text-white/50 hover:text-white p-2 rounded-full z-50 transition-colors">
+                <span class="material-symbols-outlined text-3xl">close</span>
+            </button>
+            
+            <button id="lightbox-prev" class="absolute left-2 sm:left-4 text-white p-2 bg-black/20 hover:bg-black/50 rounded-full z-50 hidden sm:block transition-colors">
+                <span class="material-symbols-outlined text-4xl">chevron_left</span>
+            </button>
+            
+            <button id="lightbox-next" class="absolute right-2 sm:right-4 text-white p-2 bg-black/20 hover:bg-black/50 rounded-full z-50 hidden sm:block transition-colors">
+                <span class="material-symbols-outlined text-4xl">chevron_right</span>
+            </button>
+
+            <!-- Imagen -->
+            <img id="lightbox-img" src="" alt="Vista completa" class="max-w-[100vw] max-h-[100dvh] object-contain select-none shadow-2xl" />
+            
+            <!-- Contador -->
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 text-white/90 text-sm font-medium bg-black/60 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10">
+                <span id="lightbox-counter">1 / 1</span>
+            </div>
+        </div>
+    </dialog>
+  </main>
+</Layout>
+
+<style>
+  dialog[open] {
+    animation: fade-in 0.2s ease-out forwards;
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+</style>
+
+<script>
+  import L from 'leaflet';
+  
+  // Data Extraction
+  const galleryContainer = document.getElementById('gallery-container');
+  // @ts-ignore
+  const allImages = galleryContainer ? JSON.parse(galleryContainer.dataset.images || '[]') : [];
+
+  const shareButton = document.getElementById('share-btn');
+  const propertyTitle = shareButton ? shareButton.dataset.title : document.title;
+  
+  // LOGIC: Compartir API
+  if (shareButton) {
+    shareButton.addEventListener('click', async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: propertyTitle,
+                    text: `Mira esta propiedad en GM Inmobiliaria: ${propertyTitle}`,
+                    url: window.location.href,
+                });
+            } catch (err) {
+                console.log('Error compartiendo:', err);
+            }
+        } else {
+            // Fallback: Copiar al portapapeles
+            try {
+                await navigator.clipboard.writeText(window.location.href);
+                alert('¡Enlace copiado al portapapeles!');
+            } catch (err) {
+                console.error('Error al copiar:', err);
+            }
+        }
+    });
+  }
+
+  // LOGIC: Lightbox
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightbox-img');
+  const lightboxCounter = document.getElementById('lightbox-counter');
+  const galleryItems = document.querySelectorAll('.gallery-item');
+  let currentIndex = 0;
+
+  const updateLightbox = (index) => {
+    currentIndex = index;
+    if(currentIndex >= allImages.length) currentIndex = 0;
+    if(currentIndex < 0) currentIndex = allImages.length - 1;
+    
+    // Fade effect simple
+    if (lightboxImg) {
+        lightboxImg.style.opacity = '0.5';
+        setTimeout(() => {
+            // @ts-ignore
+            lightboxImg.src = allImages[currentIndex];
+            lightboxImg.style.opacity = '1';
+        }, 150);
+    }
+    
+    if (lightboxCounter) {
+        lightboxCounter.textContent = `${currentIndex + 1} / ${allImages.length}`;
+    }
+  };
+
+  const openLightbox = (index) => {
+      updateLightbox(index);
+      // @ts-ignore
+      lightbox?.showModal();
+      document.body.style.overflow = 'hidden'; // Prevenir scroll de fondo
+  };
+
+  const closeLightbox = () => {
+      // @ts-ignore
+      lightbox?.close();
+      document.body.style.overflow = '';
+      if(lightboxImg) {
+          // @ts-ignore
+          lightboxImg.src = '';
+      }
+  };
+
+  // Event Listeners Gallery
+  galleryItems.forEach((item) => {
+      item.addEventListener('click', () => {
+          // @ts-ignore
+          const index = parseInt(item.getAttribute('data-index'));
+          openLightbox(index);
+      });
+  });
+
+  // Controls
+  document.getElementById('lightbox-close')?.addEventListener('click', closeLightbox);
+  document.getElementById('lightbox-prev')?.addEventListener('click', (e) => { e.stopPropagation(); updateLightbox(currentIndex - 1); });
+  document.getElementById('lightbox-next')?.addEventListener('click', (e) => { e.stopPropagation(); updateLightbox(currentIndex + 1); });
+  
+  // Close on backdrop click
+  lightbox?.addEventListener('click', (e) => {
+    // @ts-ignore
+    if (e.target === lightbox || e.target.closest('.relative') === lightbox.firstElementChild && e.target !== lightboxImg && !e.target.closest('button')) {
+        closeLightbox();
+    }
+  });
+
+  // Keyboard support
+  document.addEventListener('keydown', (e) => {
+      // @ts-ignore
+      if (!lightbox?.open) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') updateLightbox(currentIndex - 1);
+      if (e.key === 'ArrowRight') updateLightbox(currentIndex + 1);
+  });
+
+  // MAP Logic (Keep existing)
+  const mapElement = document.getElementById('map');
+  const lat = mapElement?.getAttribute('data-lat');
+  const lng = mapElement?.getAttribute('data-lng');
+
+  if (mapElement && lat && lng) {
+      const parsedLat = parseFloat(lat);
+      const parsedLng = parseFloat(lng);
+
+      const map = L.map('map', {
+          zoomControl: false,
+          scrollWheelZoom: false,
+          // @ts-ignore
+          dragging: !L.Browser.mobile 
+      }).setView([parsedLat, parsedLng], 15);
+      
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '',
+        subdomains: 'abcd',
+        maxZoom: 20
+      }).addTo(map);
+
+      // Icono custom si quisiéramos
+      L.marker([parsedLat, parsedLng]).addTo(map);
+  }
+
+  // Lógica slider fotos simple (Sync counter if needed)
+  const gallery = document.querySelector('#gallery-container');
+  if(gallery) {
+      gallery.addEventListener('scroll', () => {
+         // Optional: Update small counter on scroll
+      });
+  }
+</script>
