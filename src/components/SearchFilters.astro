@@ -1,0 +1,72 @@
+---
+---
+
+<form action="/" method="GET" class="bg-white p-6 rounded-3xl shadow-lg border border-gray-100 mb-10 transform -translate-y-4">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    
+    <!-- Operación -->
+    <div class="space-y-1">
+        <label for="operation" class="text-xs font-bold text-gray-500 uppercase tracking-wide ml-1">Operación</label>
+        <select 
+            name="operation" 
+            id="operation"
+            class="block w-full rounded-2xl border-gray-200 bg-gray-50 py-3 px-4 text-charcoal focus:border-primary focus:bg-white focus:ring-primary transition-colors cursor-pointer"
+        >
+            <option value="">Cualquiera</option>
+            <option value="venta">Comprar</option>
+            <option value="alquiler">Alquilar</option>
+            <option value="alquiler_temporal">Temporal</option>
+        </select>
+    </div>
+
+    <!-- Ciudad -->
+    <div class="space-y-1">
+        <label for="city" class="text-xs font-bold text-gray-500 uppercase tracking-wide ml-1">Ubicación</label>
+        <input 
+            type="text" 
+            name="city" 
+            id="city"
+            placeholder="Ej: Montevideo"
+            class="block w-full rounded-2xl border-gray-200 bg-gray-50 py-3 px-4 text-charcoal focus:border-primary focus:bg-white focus:ring-primary transition-colors placeholder-gray-400"
+        />
+    </div>
+
+    <!-- Precio Máximo -->
+    <div class="space-y-1">
+        <label for="maxPrice" class="text-xs font-bold text-gray-500 uppercase tracking-wide ml-1">Precio Máx</label>
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400 font-bold">$</span>
+            <input 
+                type="number" 
+                name="maxPrice" 
+                id="maxPrice"
+                placeholder="Sin límite"
+                class="block w-full rounded-2xl border-gray-200 bg-gray-50 py-3 pl-8 pr-4 text-charcoal focus:border-primary focus:bg-white focus:ring-primary transition-colors placeholder-gray-400"
+            />
+        </div>
+    </div>
+
+    <!-- Botón Buscar -->
+    <div class="flex items-end">
+        <button type="submit" class="w-full bg-charcoal text-white font-bold py-3 px-6 rounded-2xl hover:bg-black transition-all flex items-center justify-center gap-2 group shadow-md hover:shadow-xl">
+            <svg class="w-5 h-5 text-primary group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            Buscar
+        </button>
+    </div>
+
+  </div>
+</form>
+
+<script>
+    // Recuperar valores de URL para rellenar el formulario
+    const params = new URLSearchParams(window.location.search);
+    
+    const operationSelect = document.getElementById('operation') as HTMLSelectElement;
+    if(params.has('operation')) operationSelect.value = params.get('operation');
+
+    const cityInput = document.getElementById('city') as HTMLInputElement;
+    if(params.has('city')) cityInput.value = params.get('city');
+
+    const maxPriceInput = document.getElementById('maxPrice') as HTMLInputElement;
+    if(params.has('maxPrice')) maxPriceInput.value = params.get('maxPrice');
+</script>

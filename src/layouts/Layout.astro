@@ -1,0 +1,41 @@
+---
+import '@fontsource/work-sans';
+
+import { ViewTransitions } from 'astro:transitions';
+
+interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="Graciela Martínez Negocios Inmobiliarios" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+        <meta name="theme-color" content="#ecb613" />
+        <ViewTransitions />
+        {/* PWA registration handled by vite-plugin-pwa specific logic usually, or we can add a simple script here if needed. 
+            For now, relying on auto-injection or subsequent configuration. 
+        */}
+	</head>
+	<body class="bg-background-light text-charcoal font-sans antialiased overflow-x-hidden selection:bg-primary selection:text-white">
+		<slot />
+	</body>
+</html>
+<style is:global>
+	html {
+		scroll-behavior: smooth;
+	}
+    /* Mobile optimization */
+    body {
+        overscroll-behavior-y: none;
+    }
+</style>

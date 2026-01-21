@@ -1,0 +1,355 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout title="Nueva Propiedad | GM Inmobiliaria">
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <div class="min-h-screen bg-gray-50 flex flex-col">
+    <header class="bg-white shadow sticky top-0 z-30">
+      <div class="max-w-4xl mx-auto py-4 px-4 sm:px-6 flex justify-between items-center">
+        <h1 class="text-xl font-bold text-charcoal">Nueva Propiedad</h1>
+        <a href="/admin" class="text-sm text-gray-500 hover:text-charcoal"
+          >Cancelar</a
+        >
+      </div>
+    </header>
+
+    <main class="flex-1 py-8 px-4 sm:px-6">
+      <form id="propertyForm" class="max-w-4xl mx-auto space-y-8">
+        
+        <!-- Sección 1: Información Básica -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+          <h2 class="text-lg font-semibold text-charcoal mb-4">Información Básica</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700">Título</label>
+              <input type="text" name="title" required class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-primary focus:ring-primary" placeholder="Ej: Casa Minimalista en el Centro" />
+            </div>
+            
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700">Descripción</label>
+              <textarea name="description" rows="4" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-primary focus:ring-primary"></textarea>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Operación</label>
+              <select name="operation" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-primary focus:ring-primary">
+                <option value="venta">Venta</option>
+                <option value="alquiler">Alquiler</option>
+                <option value="alquiler_temporal">Alquiler Temporal</option>
+              </select>
+            </div>
+
+             <div>
+              <label class="block text-sm font-medium text-gray-700">Estado</label>
+              <select name="status" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-primary focus:ring-primary">
+                <option value="disponible">Disponible</option>
+                <option value="reservado">Reservado</option>
+                <option value="vendido">Vendido</option>
+              </select>
+            </div>
+            
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Precio</label>
+              <div class="mt-1 relative rounded-xl shadow-sm">
+                <input type="number" name="price" required class="block w-full rounded-xl border-gray-300 pl-3 pr-16 focus:border-primary focus:ring-primary" placeholder="0.00" />
+                <div class="absolute inset-y-0 right-0 flex items-center">
+                  <select name="currency" class="h-full rounded-md border-transparent bg-transparent py-0 pl-2 pr-7 text-gray-500 focus:border-primary focus:ring-primary sm:text-sm">
+                    <option value="USD">USD</option>
+                    <option value="ARS">ARS</option>
+                    <option value="UYU">UYU</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección 2: Características -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+           <h2 class="text-lg font-semibold text-charcoal mb-4">Características</h2>
+           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+             <div>
+               <label class="block text-xs font-medium text-gray-500 uppercase">Habitaciones</label>
+               <input type="number" name="bedrooms" value="0" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-primary focus:ring-primary" />
+             </div>
+             <div>
+               <label class="block text-xs font-medium text-gray-500 uppercase">Baños</label>
+               <input type="number" name="bathrooms" value="0" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-primary focus:ring-primary" />
+             </div>
+             <div>
+               <label class="block text-xs font-medium text-gray-500 uppercase">M² Cubiertos</label>
+               <input type="number" name="covered_area" value="0" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-primary focus:ring-primary" />
+             </div>
+             <div>
+               <label class="block text-xs font-medium text-gray-500 uppercase">M² Totales</label>
+               <input type="number" name="total_area" value="0" class="mt-1 block w-full rounded-xl border-gray-300 shadow-sm focus:border-primary focus:ring-primary" />
+             </div>
+             <div class="col-span-2 flex items-center pt-4">
+                <input id="garage" name="garage" type="checkbox" class="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary">
+                <label for="garage" class="ml-2 block text-sm text-gray-900">Tiene Garaje</label>
+             </div>
+           </div>
+        </div>
+
+        <!-- Sección 3: Ubicación (Mapa) -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+           <h2 class="text-lg font-semibold text-charcoal mb-4">Ubicación</h2>
+           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <input type="text" name="address" placeholder="Dirección" class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-primary focus:ring-primary" />
+                <input type="text" name="city" placeholder="Ciudad" class="block w-full rounded-xl border-gray-300 shadow-sm focus:border-primary focus:ring-primary" />
+           </div>
+           
+           <div id="map" class="h-64 w-full rounded-xl z-0"></div>
+           <p class="text-xs text-gray-500 mt-2 text-center">Toca en el mapa para marcar la ubicación exacta.</p>
+
+           <input type="hidden" name="location_lat" id="lat" />
+           <input type="hidden" name="location_lng" id="lng" />
+        </div>
+
+        <!-- Sección 4: Imágenes -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+           <h2 class="text-lg font-semibold text-charcoal mb-4">Galería de Imágenes</h2>
+           
+           <div class="flex items-center justify-center w-full">
+            <label for="dropzone-file" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                    <svg class="w-8 h-8 mb-4 text-gray-500" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 16">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"/>
+                    </svg>
+                    <p class="text-sm text-gray-500"><span class="font-semibold">Click para subir</span> o arrastra imágenes</p>
+                    <p class="text-xs text-gray-500">WEBP, PNG, JPG (MAX. 1200px)</p>
+                </div>
+                <input id="dropzone-file" type="file" multiple class="hidden" accept="image/*" />
+            </label>
+           </div> 
+
+           <div id="preview-container" class="grid grid-cols-3 gap-4 mt-6">
+                <!-- Previsualizaciones aquí -->
+           </div>
+        </div>
+
+        <div class="sticky bottom-4 z-20">
+            <button type="submit" id="submitBtn" class="w-full shadow-lg bg-charcoal text-white font-bold py-4 px-6 rounded-2xl hover:bg-gray-800 transition-all flex justify-center items-center gap-2">
+                <span>Publicar Propiedad</span>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+        </div>
+
+      </form>
+    </main>
+  </div>
+
+  <!-- Modal de Éxito -->
+  <div id="successModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-charcoal/80 backdrop-blur-sm hidden transition-all duration-300 opacity-0" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 transform scale-95 transition-all duration-300" id="successModalContent">
+      <div class="text-center">
+        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+          <svg class="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h3 class="text-2xl font-bold text-charcoal mb-2" id="modal-title">¡Propiedad Publicada!</h3>
+        <p class="text-gray-500 mb-8">La propiedad se ha guardado correctamente en la base de datos y ya está visible.</p>
+        
+        <div class="flex flex-col gap-3">
+          <a id="viewPropertyBtn" href="#" target="_blank" class="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-xl text-white bg-charcoal hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-charcoal transition-colors shadow-lg">
+            Ver Propiedad <svg class="ml-2 -mr-1 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+          </a>
+          
+          <button type="button" onclick="window.location.reload()" class="w-full inline-flex justify-center items-center px-4 py-3 border border-gray-200 text-base font-medium rounded-xl text-charcoal bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
+            Cargar Otra
+          </button>
+          
+          <a href="/admin" class="w-full inline-flex justify-center items-center px-4 py-3 border border-transparent text-base font-medium rounded-xl text-gray-500 hover:text-charcoal hover:bg-gray-50 transition-colors">
+            Volver al Panel
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</Layout>
+
+<script>
+  // @ts-nocheck
+  import L from 'leaflet';
+  import { supabase } from '../../lib/supabase';
+
+  // 1. Inicializar Mapa
+  const map = L.map('map').setView([-34.9011, -56.1645], 13); // Montevideo default
+  
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 20
+  }).addTo(map);
+
+  let marker;
+  const latInput = document.getElementById('lat') as HTMLInputElement;
+  const lngInput = document.getElementById('lng') as HTMLInputElement;
+
+  map.on('click', function(e) {
+      const { lat, lng } = e.latlng;
+      
+      if (marker) {
+          marker.setLatLng(e.latlng);
+      } else {
+          marker = L.marker(e.latlng).addTo(map);
+      }
+      
+      latInput.value = lat.toString();
+      lngInput.value = lng.toString();
+  });
+
+  // 2. Manejo de Imágenes
+  const fileInput = document.getElementById('dropzone-file') as HTMLInputElement;
+  const previewContainer = document.getElementById('preview-container');
+  let uploadedImages = []; // URLs finales
+
+  fileInput.addEventListener('change', async (e) => {
+      const files = e.target.files;
+      if(!files.length) return;
+
+      for (const file of files) {
+          // Mostrar loading state visual
+          const loadingDiv = document.createElement('div');
+          loadingDiv.className = "aspect-square bg-gray-200 rounded-xl animate-pulse";
+          previewContainer.appendChild(loadingDiv);
+
+          const formData = new FormData();
+          formData.append('file', file);
+
+          try {
+              const res = await fetch('/api/upload', {
+                  method: 'POST',
+                  body: formData
+              });
+              const data = await res.json();
+              
+              if(res.ok) {
+                  uploadedImages.push(data.path); // Guardamos el path para guardarlo en la DB (o full url según schema)
+                  
+                  // Reemplazar loading con imagen
+                  const imgDiv = document.createElement('div');
+                  imgDiv.className = "relative aspect-square rounded-xl overflow-hidden group";
+                  imgDiv.innerHTML = `
+                    <img src="${data.url}" class="w-full h-full object-cover" />
+                    <button type="button" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity" data-path="${data.path}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                  `;
+                  previewContainer.replaceChild(imgDiv, loadingDiv);
+              } else {
+                  console.error('Error subiendo imagen', data.error);
+                  loadingDiv.remove();
+                  alert('Error al subir imagen: ' + data.error);
+              }
+
+          } catch (error) {
+              console.error(error);
+              loadingDiv.remove();
+          }
+      }
+  });
+
+
+  // 3. Envío del Formulario
+  const form = document.getElementById('propertyForm');
+  const submitBtn = document.getElementById('submitBtn');
+
+  form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Validaciones básicas
+      if(!document.querySelector('[name="title"]').value) { alert('El título es obligatorio'); return; }
+      if(!document.querySelector('[name="price"]').value) { alert('El precio es obligatorio'); return; }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="animate-pulse">Guardando...</span>';
+
+      const formData = new FormData(form);
+      
+      // Convertir FormData a Objeto plano
+      const propertyData = Object.fromEntries(formData.entries());
+      
+      // Ajustar tipos de datos
+      const payload = {
+          title: propertyData.title,
+          description: propertyData.description,
+          operation: propertyData.operation,
+          status: propertyData.status,
+          price: parseFloat(propertyData.price),
+          currency: propertyData.currency,
+          bedrooms: parseInt(propertyData.bedrooms) || 0,
+          bathrooms: parseInt(propertyData.bathrooms) || 0,
+          covered_area: parseFloat(propertyData.covered_area) || 0,
+          total_area: parseFloat(propertyData.total_area) || 0,
+          garage: propertyData.garage === 'on',
+          address: propertyData.address,
+          city: propertyData.city,
+          location_lat: parseFloat(propertyData.location_lat),
+          location_lng: parseFloat(propertyData.location_lng),
+          slug: propertyData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Date.now().toString().slice(-4),
+          images: uploadedImages // Array de strings
+      };
+
+      // Interactuar con endpoint SSR para creación segura (usando cookies HttpOnly)
+      try {
+          const response = await fetch('/api/properties/create', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(payload)
+          });
+
+          const result = await response.json();
+
+          if (!response.ok) {
+              if (response.status === 401) {
+                  alert('Sesión expirada. Por favor inicie sesión nuevamente.');
+                  window.location.href = '/login';
+                  return;
+              }
+              throw new Error(result.error || 'Error desconocido');
+          }
+
+          // ÉXITO: Mostrar Modal en lugar de alert
+          const modal = document.getElementById('successModal');
+          const modalContent = document.getElementById('successModalContent');
+          const viewBtn = document.getElementById('viewPropertyBtn') as HTMLAnchorElement;
+
+          if (modal && viewBtn) {
+              // 1. Configurar el link a la nueva propiedad
+              // result.data es el objeto propiedad retornado por Supabase
+              viewBtn.href = `/propiedad/${result.data.id}`;
+
+              // 2. Mostrar el modal con transición suave
+              modal.classList.remove('hidden');
+              // Pequeño delay para permitir que el DOM se actualice antes de animar opacidad
+              requestAnimationFrame(() => {
+                  modal.classList.remove('opacity-0');
+                  if (modalContent) {
+                      modalContent.classList.remove('scale-95');
+                      modalContent.classList.add('scale-100');
+                  }
+              });
+          }
+
+      } catch (error) {
+          console.error(error);
+          alert('Error al guardar: ' + error.message);
+          submitBtn.disabled = false;
+          submitBtn.innerText = 'Publicar Propiedad';
+      }
+  });
+
+</script>

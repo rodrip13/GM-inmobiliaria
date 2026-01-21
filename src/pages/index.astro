@@ -1,0 +1,84 @@
+---
+import Layout from '../layouts/Layout.astro';
+import PropertyCard from '../components/PropertyCard.astro';
+import SearchFilters from '../components/SearchFilters.astro';
+import { supabase } from '../lib/supabase';
+
+// Estrategia SWR (Stale-While-Revalidate) para Netlify/CDN
+Astro.response.headers.set(
+  'Cache-Control', 
+  'public, max-age=60, stale-while-revalidate=600'
+);
+
+// Capturar parámetros de búsqueda
+const operation = Astro.url.searchParams.get('operation');
+const city = Astro.url.searchParams.get('city');
+const maxPrice = Astro.url.searchParams.get('maxPrice');
+
+// Construir Query
+let query = supabase
+  .from('properties')
+  .select('*')
+  .eq('status', 'disponible')
+  .order('created_at', { ascending: false });
+
+if (operation) {
+    query = query.eq('operation', operation);
+}
+
+if (city) {
+    // ilike para búsqueda insensible a mayúsculas/minúsculas
+    query = query.ilike('city', `%${city}%`); 
+}
+
+if (maxPrice) {
+    query = query.lte('price', maxPrice);
+}
+
+const { data: properties, error } = await query;
+
+if (error) {
+  console.error("Error fetching properties:", error);
+}
+---
+
+<Layout title="GM Inmobiliaria">
+	<header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a href="/" class="text-2xl font-bold text-primary tracking-tight">GM <span class="text-charcoal font-light">Inmobiliaria</span></a>
+            <a href="/admin" class="text-sm font-medium text-gray-500 hover:text-charcoal transition-colors">Admin</a>
+        </div>
+    </header>
+
+	<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Hero simple por ahora -->
+        <div class="mb-6 text-center sm:text-left">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-charcoal mb-4">
+                Encuentra tu lugar <br class="hidden sm:block" />
+                <span class="text-primary">ideal para vivir.</span>
+            </h1>
+            <p class="text-gray-500 text-lg max-w-2xl">
+                Propiedades seleccionadas exclusivamente para ti en las mejores zonas.
+            </p>
+        </div>
+
+        <!-- Buscador -->
+        <SearchFilters />
+
+        {/* Listado de Propiedades */}
+		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {properties && properties.length > 0 ? (
+                properties.map((prop) => (
+                    <PropertyCard property={prop} />
+                ))
+            ) : (
+                <div class="col-span-full py-20 text-center text-gray-400 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+                    <p class="text-xl font-medium">No encontramos propiedades con esos filtros.</p>
+                    <a href="/" class="inline-block mt-4 text-primary font-bold hover:underline">
+                        Limpiar búsqueda
+                    </a>
+                </div>
+            )}
+        </div>
+	</main>
+</Layout>
